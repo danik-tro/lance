@@ -163,9 +163,16 @@ impl From<std::io::Error> for Error {
 impl From<object_store::Error> for Error {
     #[track_caller]
     fn from(e: object_store::Error) -> Self {
-        Self::IO {
-            message: (e.to_string()),
-            location: std::panic::Location::caller().to_snafu_location(),
+        if let object_store::Error::NotFound { path, source: _ } = e {
+            Self::NotFound {
+                uri: path,
+                location: std::panic::Location::caller().to_snafu_location(),
+            }
+        } else {
+            Self::IO {
+                message: (e.to_string()),
+                location: std::panic::Location::caller().to_snafu_location(),
+            }
         }
     }
 }
